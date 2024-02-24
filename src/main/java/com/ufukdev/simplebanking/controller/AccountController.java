@@ -27,4 +27,9 @@ public class AccountController {
     public ResponseEntity<CreateTransactionResponse> depositMoney(@PathVariable("accountNumber") String accountNumber, @RequestBody CreateTransactionRequest createTransactionRequest) {
         return ResponseEntity.ok(this.bankAccountService.depositMoney(accountNumber, createTransactionRequest));
     }
+
+    @PostMapping(value = "/debit/{accountNumber}")
+    public ResponseEntity<CreateTransactionResponse> withdrawMoney(@PathVariable("accountNumber") String accountNumber, @RequestBody CreateTransactionRequest createTransactionRequest){
+        return ResponseEntity.ok(this.bankAccountService.withdrawMoney(accountNumber, createTransactionRequest));
+    }
 }

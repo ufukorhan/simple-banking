@@ -1,6 +1,7 @@
 package com.ufukdev.simplebanking.services;
 
 import com.ufukdev.simplebanking.dto.model.DepositTransaction;
+import com.ufukdev.simplebanking.dto.model.WithdrawalTransaction;
 import com.ufukdev.simplebanking.dto.request.CreateBankAccountRequest;
 import com.ufukdev.simplebanking.dto.request.CreateTransactionRequest;
 import com.ufukdev.simplebanking.dto.response.CreateBankAccountResponse;
@@ -11,6 +12,7 @@ import com.ufukdev.simplebanking.entity.TransactionEntity;
 import com.ufukdev.simplebanking.enums.Status;
 import com.ufukdev.simplebanking.enums.TransactionType;
 import com.ufukdev.simplebanking.exceptions.BankAccountExistsException;
+import com.ufukdev.simplebanking.exceptions.NotEnoughMoneyException;
 import com.ufukdev.simplebanking.repository.BankAccountRepository;
 import com.ufukdev.simplebanking.repository.BankAccountTransactionRepository;
 import com.ufukdev.simplebanking.repository.TransactionRepository;
@@ -88,9 +90,47 @@ public class BankAccountService{
                 .build();
     }
 
+    public CreateTransactionResponse withdrawMoney(String accountNumber, CreateTransactionRequest createTransactionRequest){
+        BankAccountEntity bankAccountEntity = this.bankAccountRepository.findByAccountNumber(accountNumber);
+        this.checkBankAccountExists(bankAccountEntity, accountNumber);
+        this.checkBankAccountBalance(createTransactionRequest, bankAccountEntity);
+
+        bankAccountEntity.setBalance(bankAccountEntity.getBalance().subtract(createTransactionRequest.getAmount()));
+        this.bankAccountRepository.save(bankAccountEntity);
+
+        WithdrawalTransaction withdrawalTransaction = WithdrawalTransaction.builder()
+                .amount(createTransactionRequest.getAmount())
+                .build();
+
+        TransactionEntity transactionEntity = TransactionEntity.builder()
+                .id(withdrawalTransaction.getApprovalCode())
+                .amount(withdrawalTransaction.getAmount())
+                .type(TransactionType.WITHDRAWAL.getType())
+                .build();
+
+        this.transactionRepository.save(transactionEntity);
+
+        BankAccountTransactionEntity bankAccountTransactionEntity = BankAccountTransactionEntity.builder()
+                .bankAccountId(bankAccountEntity.getId())
+                .transactionId(transactionEntity.getId())
+                .build();
+
+        this.bankAccountTransactionRepository.save(bankAccountTransactionEntity);
+
+        return CreateTransactionResponse.builder()
+                .approvalCode(transactionEntity.getId())
+                .status(Status.OK.getStatus())
+                .build();
+    }
+
     private void checkBankAccountExists(BankAccountEntity bankAccountEntity, String accountNumber) {
         if (Objects.isNull(bankAccountEntity)) {
             throw new BankAccountExistsException(ErrorMessage.BANK_ACCOUNT_NOT_FOUND, accountNumber);
+        }
+    }
+    private void checkBankAccountBalance(CreateTransactionRequest createTransactionRequest, BankAccountEntity bankAccountEntity){
+        if (bankAccountEntity.getBalance().compareTo(createTransactionRequest.getAmount()) < 0){
+            throw new NotEnoughMoneyException(ErrorMessage.NOT_ENOUGH_MONEY, bankAccountEntity.getAccountNumber());
         }
     }
 }
