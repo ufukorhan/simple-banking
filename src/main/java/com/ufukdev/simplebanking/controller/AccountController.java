@@ -11,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping(value = "/account/v1")
+@RequestMapping(value = "/account/v1", produces = "application/json", consumes = "application/json")
 public class AccountController {
     private final BankAccountService bankAccountService;
 
