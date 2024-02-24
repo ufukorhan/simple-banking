@@ -1,4 +1,4 @@
-package com.ufukdev.simplebanking.model;
+package com.ufukdev.simplebanking.entity;
 
 
 import jakarta.persistence.*;
@@ -15,7 +15,7 @@ import java.util.UUID;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Table(name = "bank_account_transaction")
-public class BankAccountTransaction {
+public class BankAccountTransactionEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

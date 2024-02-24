@@ -1,13 +1,13 @@
 package com.ufukdev.simplebanking.repository;
 
-import com.ufukdev.simplebanking.model.BankAccount;
+import com.ufukdev.simplebanking.entity.BankAccountEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.UUID;
 
-public interface BankAccountRepository extends JpaRepository<BankAccount, UUID> {
+public interface BankAccountRepository extends JpaRepository<BankAccountEntity, UUID> {
 
-    BankAccount findByAccountNumber(String accountNumber);
+    BankAccountEntity findByAccountNumber(String accountNumber);
 
     boolean existsByAccountNumber(String accountNumber);
 }

@@ -1,4 +1,4 @@
-package com.ufukdev.simplebanking.constant;
+package com.ufukdev.simplebanking.util;
 
 public class ErrorMessage {
     public static final String BANK_ACCOUNT_ALREADY_EXISTS = "Bank account with this account number already exists";
