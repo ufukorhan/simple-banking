@@ -5,6 +5,7 @@ import com.ufukdev.simplebanking.dto.request.CreateBankAccountRequest;
 import com.ufukdev.simplebanking.dto.request.CreateTransactionRequest;
 import com.ufukdev.simplebanking.dto.response.CreateBankAccountResponse;
 import com.ufukdev.simplebanking.dto.response.CreateTransactionResponse;
+import com.ufukdev.simplebanking.dto.response.GetBankAccountDetailResponse;
 import com.ufukdev.simplebanking.services.BankAccountService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -31,5 +32,10 @@ public class AccountController {
     @PostMapping(value = "/debit/{accountNumber}")
     public ResponseEntity<CreateTransactionResponse> withdrawMoney(@PathVariable("accountNumber") String accountNumber, @RequestBody CreateTransactionRequest createTransactionRequest){
         return ResponseEntity.ok(this.bankAccountService.withdrawMoney(accountNumber, createTransactionRequest));
+    }
+
+    @GetMapping(value = "/{accountNumber}")
+    public ResponseEntity<GetBankAccountDetailResponse> getBankAccountDetail(@PathVariable("accountNumber") String accountNumber){
+        return ResponseEntity.ok(this.bankAccountService.getBankAccountDetails(accountNumber));
     }
 }

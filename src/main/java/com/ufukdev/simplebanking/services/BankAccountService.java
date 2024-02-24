@@ -1,11 +1,14 @@
 package com.ufukdev.simplebanking.services;
 
+import com.ufukdev.simplebanking.dto.model.BankAccount;
 import com.ufukdev.simplebanking.dto.model.DepositTransaction;
+import com.ufukdev.simplebanking.dto.model.Transaction;
 import com.ufukdev.simplebanking.dto.model.WithdrawalTransaction;
 import com.ufukdev.simplebanking.dto.request.CreateBankAccountRequest;
 import com.ufukdev.simplebanking.dto.request.CreateTransactionRequest;
 import com.ufukdev.simplebanking.dto.response.CreateBankAccountResponse;
 import com.ufukdev.simplebanking.dto.response.CreateTransactionResponse;
+import com.ufukdev.simplebanking.dto.response.GetBankAccountDetailResponse;
 import com.ufukdev.simplebanking.entity.BankAccountEntity;
 import com.ufukdev.simplebanking.entity.BankAccountTransactionEntity;
 import com.ufukdev.simplebanking.entity.TransactionEntity;
@@ -19,7 +22,10 @@ import com.ufukdev.simplebanking.repository.TransactionRepository;
 import com.ufukdev.simplebanking.util.ErrorMessage;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -121,6 +127,50 @@ public class BankAccountService{
                 .approvalCode(transactionEntity.getId())
                 .status(Status.OK.getStatus())
                 .build();
+    }
+
+    public GetBankAccountDetailResponse getBankAccountDetails(String accountNumber) {
+        BankAccountEntity bankAccountEntity = this.bankAccountRepository.findByAccountNumber(accountNumber);
+        this.checkBankAccountExists(bankAccountEntity, accountNumber);
+
+        BankAccount bankAccount = BankAccount.builder()
+                .id(bankAccountEntity.getId())
+                .accountNumber(bankAccountEntity.getAccountNumber())
+                .owner(bankAccountEntity.getOwner())
+                .balance(bankAccountEntity.getBalance())
+                .createdDate(bankAccountEntity.getCreatedDate())
+                .build();
+
+
+        GetBankAccountDetailResponse getBankAccountDetailResponse = GetBankAccountDetailResponse.builder()
+                .accountNumber(bankAccount.getAccountNumber())
+                .owner(bankAccount.getOwner())
+                .balance(bankAccount.getBalance())
+                .createdDate(bankAccount.getCreatedDate().toString())
+                .build();
+
+
+        List<UUID> transactionIdList = this.bankAccountTransactionRepository.findByBankAccountId(
+                        bankAccount.getId())
+                .stream()
+                .map(BankAccountTransactionEntity::getTransactionId)
+                .toList();
+
+        if (transactionIdList.isEmpty()) {
+            return getBankAccountDetailResponse;
+        }
+
+        List<TransactionEntity> transactionEntityList = this.transactionRepository.findAllById(transactionIdList);
+        List<Transaction> transactions = transactionEntityList.stream()
+                .map(transactionEntity -> Transaction.builder()
+                        .approvalCode(transactionEntity.getId())
+                        .date(transactionEntity.getDate().toString())
+                        .amount(transactionEntity.getAmount())
+                        .type(transactionEntity.getType())
+                        .build()).collect(Collectors.toList());
+
+        getBankAccountDetailResponse.setTransactions(transactions);
+        return getBankAccountDetailResponse;
     }
 
     private void checkBankAccountExists(BankAccountEntity bankAccountEntity, String accountNumber) {
